@@ -21,12 +21,6 @@ local function inDistanceOfGunRack(id, src)
     return false
 end
 
-local function deleteRack(id)
-    Racks[id] = nil
-    db.deleteGunRack(id)
-    TriggerClientEvent('js5m_gunrack:client:destroyGunRack', -1, id)
-end
-
 RegisterServerEvent('js5m_gunrack:server:placeGunRack', function(coords, rot)
     local src = source
     local ped = GetPlayerPed(src)
@@ -54,11 +48,18 @@ RegisterServerEvent('js5m_gunrack:server:storeWeapon', function(rackIndex, weapo
     if not Config.rackableWeapons[weaponName] then return end
     local rackSlot = getRifleSlot(rackIndex)
     if rackSlot then
-        if ox_inventory:RemoveItem(src, weaponName, 1) then
+        local slot = exports.ox_inventory:GetSlot(src, weaponSlot)
+        if slot.name ~= weaponName then return end
+        if ox_inventory:RemoveItem(src, weaponName, 1, nil, weaponSlot) then
             local rackInfo = Racks[rackIndex]
-            rackInfo.rifles[rackSlot] = {name = weaponName, available = false}
+            local data = {
+                name = weaponName,
+                available = false,
+                metadata = slot.metadata
+            }
+            rackInfo.rifles[rackSlot] = data
             db.saveGunRack(rackIndex, rackInfo)
-            TriggerClientEvent('js5m_gunrack:client:storeWeapon', -1, rackIndex, rackSlot, weaponName)
+            TriggerClientEvent('js5m_gunrack:client:storeWeapon', -1, rackIndex, rackSlot, data)
         else
             --something fukt
         end
@@ -69,9 +70,8 @@ end)
 RegisterServerEvent('js5m_gunrack:server:takeWeapon', function(rackIndex, rackSlot, weaponName )
     local src = source
     if not inDistanceOfGunRack(rackIndex, src) then return end
-    if ox_inventory:AddItem(src, weaponName, 1) then
+    if ox_inventory:AddItem(src, weaponName, 1, Racks[rackIndex].rifles[rackSlot].metadata) then
         local rackInfo = Racks[rackIndex]
-        print('slot', rackSlot)
         rackInfo.rifles[rackSlot] = {name = nil, available = true}
         db.saveGunRack(rackIndex, rackInfo)
         TriggerClientEvent('js5m_gunrack:client:takeWeapon', -1, rackIndex, rackSlot)

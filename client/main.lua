@@ -9,6 +9,13 @@ local Keys = {
 	["Q"] = 44, ["E"] = 38, ["ENTER"] = 18, ["X"] = 73
 }
 
+local ox_items = exports.ox_inventory:Items()
+for item, data in pairs(ox_items) do
+    if Config.rackableWeapons[item] then
+        Config.rackableWeapons[item].label = data.label
+    end
+end
+
 local function storeWeapon(rack, slot, name)
     TriggerServerEvent('js5m_gunrack:server:storeWeapon', rack, slot, name)
 end
@@ -27,7 +34,7 @@ local function GetRackPositionOffset(rackIndex, slot, weapon)
     elseif slot == 4 then
         xOffset = -0.06
     elseif slot == 5 then
-        xOffset = 0.06
+        xOffset = 0.07
     end
 
     local zOffset = Config.rackableWeapons[weapon].offset.z or 0.0
@@ -35,16 +42,74 @@ local function GetRackPositionOffset(rackIndex, slot, weapon)
     return GetOffsetFromEntityInWorldCoords(rack, xOffset, yOffset, zOffset)
 end
 
+function hasVarMod(hash, components)
+    for i = 1, #components do
+        local component = ox_items[components[i]]
+
+        if component.type == 'skin' or component.type == 'upgrade' then
+            local weaponComp = component.client.component
+            for j = 1, #weaponComp do
+                local weaponComponent = weaponComp[j]
+                if DoesWeaponTakeWeaponComponent(hash, weaponComponent) then
+                    return GetWeaponComponentTypeModel(weaponComponent)
+                end
+            end
+        end
+    end
+end
+
+function getWeaponComponents(name, hash, components)
+    local weaponComponents = {}
+    local amount = 0
+    local hadClip = false
+    local varMod = hasVarMod(hash, components)
+
+    for i = 1, #components do
+        local weaponComp = ox_items[components[i]]
+        for j = 1, #weaponComp.client.component do
+            local weaponComponent = weaponComp.client.component[j]
+            if DoesWeaponTakeWeaponComponent(hash, weaponComponent) and varMod ~= weaponComponent then
+                amount += 1
+                weaponComponents[amount] = weaponComponent
+
+                if weaponComp.type == 'magazine' then
+                    hadClip = true
+                end
+
+                break
+            end
+        end
+    end
+
+    if not hadClip then
+        amount += 1
+        weaponComponents[amount] = joaat(('COMPONENT_%s_CLIP_01'):format(name:sub(8)))
+    end
+
+
+    return varMod, weaponComponents, hadClip
+end
+
 local function spawnGun(rackId, slot)
     local rack = Racks[rackId]
     if not rack then return end
     local modelCoords = GetRackPositionOffset(rackId, slot, rack.rifles[slot].name)
-    -- rack.rifles[slot].object = CreateObject(WeaponsModels[rack.rifles[slot].name].model, modelCoords.x, modelCoords.y, modelCoords.z, false, false, false)
     local hash = GetHashKey(rack.rifles[slot].name)
     lib.requestWeaponAsset(hash, 5000, 31, 0)
     rack.rifles[slot].object = CreateWeaponObject(hash, 50, modelCoords.x, modelCoords.y, modelCoords.z, true, 1.0, 0)
+    local hasLuxeMod, components, hadClip = getWeaponComponents(rack.rifles[slot].name, hash, rack.rifles[slot].metadata.components)
+    if hasLuxeMod then
+        lib.requestModel(hasLuxeMod, 500)
+    end
+    if components then
+        for i = 1, #components do
+            GiveWeaponComponentToWeaponObject(rack.rifles[slot].object, components[i])
+        end
+    end
+    if rack.rifles[slot].tint then
+        SetWeaponObjectTintIndex(rack.rifles[slot].object, rack.rifles[slot].tint)
+    end
     FreezeEntityPosition(rack.rifles[slot].object, true)
-    -- while not rack.rifles[slot].object do Wait(1) end
     SetEntityRotation(rack.rifles[slot].object, 1, 260, rack.coords.w - 90)
 end
 
@@ -80,13 +145,22 @@ local function displayPlayerWeapons(data)
     local options = {}
 
     local items = ox_inventory:GetPlayerItems()
+    -- print(json.encode(items, {indent=true}))
     for k, v in pairs(items) do
         if Config.rackableWeapons[v.name] then
+            local metadata = {}
+            for i=1, #v.metadata.components do
+                metadata[#metadata+1] = {label = "Component", value = ox_items[v.metadata.components[i]].label}
+            end
+            metadata[#metadata+1] = {label = "Ammo", value = v.metadata.ammo}
+            metadata[#metadata+1] = {label = "Durability", value = v.metadata.durability}
             options[#options+1] = {
                 title = 'Store ' .. v.label,
+                description = 'Example button description',
                 onSelect = function()
                     storeWeapon(data.args.rack, v.slot, v.name)
-                end
+                end,
+                metadata = metadata,
             }
         end
     end
@@ -116,11 +190,19 @@ local function takeRackWeapons(data)
     for i=1, #rack.rifles do
         local item = rack.rifles[i]
         if item.name then
+            local metadata = {}
+            for i=1, #item.metadata.components do
+                metadata[#metadata+1] = {label = "Component", value = ox_items[item.metadata.components[i]].label}
+            end
+            metadata[#metadata+1] = {label = "Ammo", value = item.metadata.ammo}
+            metadata[#metadata+1] = {label = "Durability", value = item.metadata.durability}
             options[#options+1] = {
-                title = 'Take ' .. item.name,
+                
+                title = 'Take ' .. Config.rackableWeapons[item.name].label,
                 onSelect = function()
                     takeWeapon(data.args.rack, i, item.name)
-                end
+                end,
+                metadata = metadata,
             }
         end
     end
@@ -140,13 +222,13 @@ end
 
 local function destroyGunRack(data)
     local rack = data.args.rack
-    lib.alertDialog({
+    local confirm = lib.alertDialog({
         header = 'Destroy the gun rack?',
         content = 'Are you sure that you want to destroy this build? You will lose all the contents.',
         centered = true,
         cancel = true
     })
-
+    if confirm ~= 'confirm' then return end
     TriggerServerEvent('js5m_gunrack:server:destroyGunRack', rack)
 end
 
@@ -338,9 +420,9 @@ RegisterNetEvent('js5m_gunrack:client:placeGunRack', function(id, data)
     Racks[id] = data
 end)
 
-RegisterNetEvent('js5m_gunrack:client:storeWeapon', function(rackIndex, rackSlot, weaponName)
+RegisterNetEvent('js5m_gunrack:client:storeWeapon', function(rackIndex, rackSlot, data)
     if source == '' then return end
-    Racks[rackIndex].rifles[rackSlot] = {name = weaponName, available = false}
+    Racks[rackIndex].rifles[rackSlot] = data
     spawnGun(rackIndex, rackSlot)
 end)
 
