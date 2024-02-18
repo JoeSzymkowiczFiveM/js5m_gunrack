@@ -25,5 +25,10 @@ You will need to add a `gunrack` item to your inventory items list.
 - qb-target - This was used because ox_target has backwards compatibility for qb-target, so it will work with that aswell.
 - [ox_inventory](https://github.com/overextended/ox_inventory)
 
+
+## 👐 Credit
+
+A huge thank you to [FjamZoo](https://github.com/FjamZoo) for his research and work with weapons components and skins. Also, huge shoutout to the [Overextended](https://github.com/overextended) for their continued work on the ox resources. Keep FiveM free! A big thank you to the guy that was selling roughly this same thing for €120 on the Releases forum, for the motivation to work on this.
+
 ## Discord
 [Joe Szymkowicz FiveM Development](https://discord.gg/5vPGxyCB4z)
