@@ -527,7 +527,7 @@ AddEventHandler('onResourceStop', function(resourceName)
     end
 end)
 
-AddEventHandler('onResourceStart', function(resourceName)
+AddEventHandler('onClientResourceStart', function(resourceName)
     if GetCurrentResourceName() ~= resourceName then return end
     Racks = lib.callback.await('js5m_gunrack:server:getRacks', false)
 end)

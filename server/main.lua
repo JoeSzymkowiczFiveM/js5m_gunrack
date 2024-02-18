@@ -29,15 +29,17 @@ RegisterServerEvent('js5m_gunrack:server:placeGunRack', function(coords, rot)
     local sourceCoords = GetEntityCoords(ped)
     if #(sourceCoords - coords) > 5 then return end
 
-    local rackData = {
-        coords = {x = coords.x, y = coords.y, z = coords.z, w = rot},
-        rifles = {},
-        pistols = {},
-        taser = false,
-    }
-    local insertedId = db.createGunRack(rackData)
-    Racks[insertedId] = rackData
-    TriggerClientEvent('js5m_gunrack:client:placeGunRack', -1, insertedId, rackData)
+    if ox_inventory:RemoveItem(src, 'gunrack', 1) then
+        local rackData = {
+            coords = {x = coords.x, y = coords.y, z = coords.z, w = rot},
+            rifles = {},
+            pistols = {},
+            taser = false,
+        }
+        local insertedId = db.createGunRack(rackData)
+        Racks[insertedId] = rackData
+        TriggerClientEvent('js5m_gunrack:client:placeGunRack', -1, insertedId, rackData)
+    end
 end)
 
 RegisterServerEvent('js5m_gunrack:server:storeWeapon', function(rackIndex, weaponSlot, weaponName)
