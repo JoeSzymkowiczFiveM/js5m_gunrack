@@ -1,22 +1,12 @@
 local ox_inventory = exports.ox_inventory
--- local db = require 'server.db.kvp'
+local db = require 'server.db.mysql'
 -- local Racks = db.getAllGunRacks()
 
 local Racks = {}
 
 MySQL.ready(function()
-    local result = MySQL.Sync.fetchAll("SELECT * FROM gunracks")
-    for k, v in pairs(result) do        
-        Racks[v.id] = {
-            coords = json.decode(v.coords),
-            rifles = json.decode(v.rifles),
-            taser = v.taser == 1 and true or false
-        }
-    end
-    print("Gun Racks Loaded")
+    Racks = db.getAllGunRacks()
 end)
-
-
 
 local function getRifleSlot(rack)
     for i=1, 5 do
@@ -41,7 +31,7 @@ RegisterServerEvent('js5m_gunrack:server:placeGunRack', function(coords, rot)
     local src = source
     local ped = GetPlayerPed(src)
     local sourceCoords = GetEntityCoords(ped)
-    if #(sourceCoords - coords) > 5 then return end
+    if #(sourceCoords - coords) > 6 then return end
 
     -- local Player = Ox.GetPlayer(src)
     if exports.ox_inventory:RemoveItem(src, 'gun_rack', 1) then
@@ -50,20 +40,14 @@ RegisterServerEvent('js5m_gunrack:server:placeGunRack', function(coords, rot)
             rifles = {},
             taser = false,
         }
-        local id = MySQL.Sync.insert('INSERT INTO gunracks (coords, rifles, taser) VALUES (@coords, @rifles, @taser)', {
-            ['@coords'] = json.encode(rackData.coords),
-            ['@rifles'] = json.encode(rackData.rifles),
-            ['@taser'] = rackData.taser and 1 or 0
-        })
-        rackData.id = id
+        local id = db.createGunRack(rackData)
         Racks[id] = rackData
         TriggerClientEvent('js5m_gunrack:client:placeGunRack', -1, id, rackData)
-
-        -- local insertedId = db.createGunRack(rackData)
-        -- Racks[insertedId] = rackData
-        -- TriggerClientEvent('js5m_gunrack:client:placeGunRack', -1, insertedId, rackData)
     else
-        TriggerClientEvent('QBCore:Notify', src, "You don\'t have a Gun Rack", "error")
+        TriggerClientEvent('ox_lib:notify', src, {
+            description = 'Weird, you don\'t have that item',
+            type = 'error'
+        })
     end
 end)
 
@@ -83,14 +67,13 @@ RegisterServerEvent('js5m_gunrack:server:storeWeapon', function(rackIndex, weapo
                 metadata = slot.metadata
             }
             rackInfo.rifles[rackSlot] = data
-            -- db.saveGunRack(rackIndex, rackInfo)
-            MySQL.Async.execute('UPDATE gunracks SET rifles = @rifles WHERE id = @id', {
-                ['@rifles'] = json.encode(rackInfo.rifles),
-                ['@id'] = rackIndex
-            })
+            db.saveGunRack(rackIndex, rackInfo)
             TriggerClientEvent('js5m_gunrack:client:storeWeapon', -1, rackIndex, rackSlot, data)
         else
-            --something fukt
+            TriggerClientEvent('ox_lib:notify', src, {
+                description = 'Weird, you don\'t have that weapon',
+                type = 'error'
+            })
         end
     else
     end
@@ -102,11 +85,7 @@ RegisterServerEvent('js5m_gunrack:server:takeWeapon', function(rackIndex, rackSl
     if ox_inventory:AddItem(src, weaponName, 1, Racks[rackIndex].rifles[rackSlot].metadata) then
         local rackInfo = Racks[rackIndex]
         rackInfo.rifles[rackSlot] = {name = nil, available = true}
-        -- db.saveGunRack(rackIndex, rackInfo)
-        MySQL.Async.execute('UPDATE gunracks SET rifles = @rifles WHERE id = @id', {
-            ['@rifles'] = json.encode(rackInfo.rifles),
-            ['@id'] = rackIndex
-        })
+        db.saveGunRack(rackIndex, rackInfo)
         TriggerClientEvent('js5m_gunrack:client:takeWeapon', -1, rackIndex, rackSlot)
     else
     end
@@ -118,10 +97,7 @@ RegisterServerEvent('js5m_gunrack:server:destroyGunRack', function(rackIndex)
     if not inDistanceOfGunRack(rackIndex, src) then return end
     if not Racks[rackIndex] then return end
     Racks[rackIndex] = nil
-    -- db.deleteGunRack(rackIndex)
-    MySQL.Async.execute('DELETE FROM gunracks WHERE id = @id', {
-        ['@id'] = rackIndex
-    })
+    db.deleteGunRack(rackIndex)
     TriggerClientEvent('js5m_gunrack:client:destroyGunRack', -1, rackIndex)
 end)
 
