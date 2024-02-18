@@ -1,12 +1,12 @@
+Racks = {}
 local ox_inventory = exports.ox_inventory
 local db = require 'server.db.mysql'
--- local Racks = db.getAllGunRacks()
 
-Racks = {}
-
-local function getRifleSlot(rack)
+local function getRifleSlot(rack, weaponName)
+    local weaponType = Config.rackableWeapons[weaponName].weaponType
+    if not weaponType then return false end
     for i=1, 5 do
-        if not Racks[rack].rifles[i] or Racks[rack].rifles[i].available then
+        if not Racks[rack][weaponType][i] or Racks[rack][weaponType][i].available then
             return i
         end
     end
@@ -27,31 +27,25 @@ RegisterServerEvent('js5m_gunrack:server:placeGunRack', function(coords, rot)
     local src = source
     local ped = GetPlayerPed(src)
     local sourceCoords = GetEntityCoords(ped)
-    if #(sourceCoords - coords) > 6 then return end
+    if #(sourceCoords - coords) > 5 then return end
 
-    -- local Player = Ox.GetPlayer(src)
-    if exports.ox_inventory:RemoveItem(src, 'gun_rack', 1) then
-        local rackData = {
-            coords = {x = coords.x, y = coords.y, z = coords.z, w = rot},
-            rifles = {},
-            taser = false,
-        }
-        local id = db.createGunRack(rackData)
-        Racks[id] = rackData
-        TriggerClientEvent('js5m_gunrack:client:placeGunRack', -1, id, rackData)
-    else
-        TriggerClientEvent('ox_lib:notify', src, {
-            description = 'Weird, you don\'t have that item',
-            type = 'error'
-        })
-    end
+    local rackData = {
+        coords = {x = coords.x, y = coords.y, z = coords.z, w = rot},
+        rifles = {},
+        pistols = {},
+        taser = false,
+    }
+    local insertedId = db.createGunRack(rackData)
+    Racks[insertedId] = rackData
+    TriggerClientEvent('js5m_gunrack:client:placeGunRack', -1, insertedId, rackData)
 end)
 
-RegisterServerEvent('js5m_gunrack:server:storeWeapon', function(rackIndex, weaponSlot, weaponName )
+RegisterServerEvent('js5m_gunrack:server:storeWeapon', function(rackIndex, weaponSlot, weaponName)
     local src = source
     if not inDistanceOfGunRack(rackIndex, src) then return end
     if not Config.rackableWeapons[weaponName] then return end
-    local rackSlot = getRifleSlot(rackIndex)
+    local weaponType = Config.rackableWeapons[weaponName].weaponType
+    local rackSlot = getRifleSlot(rackIndex, weaponName)
     if rackSlot then
         local slot = exports.ox_inventory:GetSlot(src, weaponSlot)
         if slot.name ~= weaponName then return end
@@ -62,9 +56,9 @@ RegisterServerEvent('js5m_gunrack:server:storeWeapon', function(rackIndex, weapo
                 available = false,
                 metadata = slot.metadata
             }
-            rackInfo.rifles[rackSlot] = data
+            rackInfo[weaponType][rackSlot] = data
             db.saveGunRack(rackIndex, rackInfo)
-            TriggerClientEvent('js5m_gunrack:client:storeWeapon', -1, rackIndex, rackSlot, data)
+            TriggerClientEvent('js5m_gunrack:client:storeWeapon', -1, rackIndex, rackSlot, weaponType, data)
         else
             TriggerClientEvent('ox_lib:notify', src, {
                 description = 'Weird, you don\'t have that weapon',
@@ -72,20 +66,24 @@ RegisterServerEvent('js5m_gunrack:server:storeWeapon', function(rackIndex, weapo
             })
         end
     else
+        TriggerClientEvent('ox_lib:notify', src, {
+            description = 'No more rifle slots left',
+            type = 'error'
+        })
     end
 end)
 
-RegisterServerEvent('js5m_gunrack:server:takeWeapon', function(rackIndex, rackSlot, weaponName )
+RegisterServerEvent('js5m_gunrack:server:takeWeapon', function(rackIndex, rackSlot, weaponName)
     local src = source
     if not inDistanceOfGunRack(rackIndex, src) then return end
-    if ox_inventory:AddItem(src, weaponName, 1, Racks[rackIndex].rifles[rackSlot].metadata) then
+    local weaponType = Config.rackableWeapons[weaponName].weaponType
+    if ox_inventory:AddItem(src, weaponName, 1, Racks[rackIndex][weaponType][rackSlot].metadata) then
         local rackInfo = Racks[rackIndex]
-        rackInfo.rifles[rackSlot] = {name = nil, available = true}
+        rackInfo[weaponType][rackSlot] = {name = nil, available = true}
         db.saveGunRack(rackIndex, rackInfo)
-        TriggerClientEvent('js5m_gunrack:client:takeWeapon', -1, rackIndex, rackSlot)
+        TriggerClientEvent('js5m_gunrack:client:takeWeapon', -1, rackIndex, rackSlot, weaponType)
     else
     end
-    
 end)
 
 RegisterServerEvent('js5m_gunrack:server:destroyGunRack', function(rackIndex)

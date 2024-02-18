@@ -26,23 +26,47 @@ end
 
 local function GetRackPositionOffset(rackIndex, slot, weapon)
     local rack = Racks[rackIndex].object
-    local xOffset = -0.39
-    if slot == 2 then
-        xOffset = -0.28
-    elseif slot == 3 then
-        xOffset = -0.17
-    elseif slot == 4 then
-        xOffset = -0.06
-    elseif slot == 5 then
-        xOffset = 0.07
+    local weaponType = Config.rackableWeapons[weapon].weaponType
+    local xOffset = 0.0
+    if weaponType == 'rifles' then
+        if slot == 1 then
+            xOffset = -0.395
+        elseif slot == 2 then
+            xOffset = -0.28
+        elseif slot == 3 then
+            xOffset = -0.17
+        elseif slot == 4 then
+            xOffset = -0.06
+        elseif slot == 5 then
+            xOffset = 0.06
+        end
+    elseif weaponType == 'pistols' then
+        if slot == 1 then
+            xOffset = -0.32
+        elseif slot == 2 then
+            xOffset = -0.17
+        elseif slot == 3 then
+            xOffset = 0.00
+        elseif slot == 4 then
+            xOffset = 0.15
+        elseif slot == 5 then
+            xOffset = 0.30
+        end
     end
 
-    local zOffset = Config.rackableWeapons[weapon].offset.z or 0.0
-    local yOffset = Config.rackableWeapons[weapon].offset.y or 0.0
-    return GetOffsetFromEntityInWorldCoords(rack, xOffset, yOffset, zOffset)
+    local weaponData = Config.rackableWeapons[weapon]
+    local zOffset = weaponData.offset.z or 0.0
+    local yOffset = weaponData.offset.y or 0.0
+
+    local xRotation = weaponData.rotation.x or 1
+    local yRotation = weaponData.rotation.y or 260
+    local rackHeading = Racks[rackIndex].coords.w
+    local weaponZRotation = weaponData.rotation.z or 90
+    local zRotation = rackHeading - weaponZRotation
+    return {offset = GetOffsetFromEntityInWorldCoords(rack, xOffset, yOffset, zOffset), rot = {x = xRotation, y = yRotation, z = zRotation}}
 end
 
-function hasVarMod(hash, components)
+local function hasVarMod(hash, components)
     for i = 1, #components do
         local component = ox_items[components[i]]
 
@@ -58,7 +82,7 @@ function hasVarMod(hash, components)
     end
 end
 
-function getWeaponComponents(name, hash, components)
+local function getWeaponComponents(name, hash, components)
     local weaponComponents = {}
     local amount = 0
     local hadClip = false
@@ -90,34 +114,38 @@ function getWeaponComponents(name, hash, components)
     return varMod, weaponComponents, hadClip
 end
 
-local function spawnGun(rackId, slot)
+local function spawnGun(rackId, slot, weaponType)
     local rack = Racks[rackId]
     if not rack then return end
-    local modelCoords = GetRackPositionOffset(rackId, slot, rack.rifles[slot].name)
-    local hash = GetHashKey(rack.rifles[slot].name)
+
+    local position = GetRackPositionOffset(rackId, slot, rack[weaponType][slot].name)
+    local hash = GetHashKey(rack[weaponType][slot].name)
     lib.requestWeaponAsset(hash, 5000, 31, 0)
-    rack.rifles[slot].object = CreateWeaponObject(hash, 50, modelCoords.x, modelCoords.y, modelCoords.z, true, 1.0, 0)
-    local hasLuxeMod, components, hadClip = getWeaponComponents(rack.rifles[slot].name, hash, rack.rifles[slot].metadata.components)
+    rack[weaponType][slot].object = CreateWeaponObject(hash, 50, position.offset.x, position.offset.y, position.offset.z, true, 1.0, 0)
+    while not DoesEntityExist(rack[weaponType][slot].object) do Wait(1) end
+    SetEntityCoords(rack[weaponType][slot].object, position.offset.x, position.offset.y, position.offset.z, false, false, false, true)
+    local hasLuxeMod, components, hadClip = getWeaponComponents(rack[weaponType][slot].name, hash, rack[weaponType][slot].metadata.components)
     if hasLuxeMod then
         lib.requestModel(hasLuxeMod, 500)
     end
     if components then
         for i = 1, #components do
-            GiveWeaponComponentToWeaponObject(rack.rifles[slot].object, components[i])
+            GiveWeaponComponentToWeaponObject(rack[weaponType][slot].object, components[i])
         end
     end
-    if rack.rifles[slot].tint then
-        SetWeaponObjectTintIndex(rack.rifles[slot].object, rack.rifles[slot].tint)
+    if rack[weaponType][slot].tint then
+        SetWeaponObjectTintIndex(rack[weaponType][slot].object, rack[weaponType][slot].tint)
     end
-    FreezeEntityPosition(rack.rifles[slot].object, true)
-    SetEntityRotation(rack.rifles[slot].object, 1, 260, rack.coords.w - 90)
+    FreezeEntityPosition(rack[weaponType][slot].object, true)
+    SetEntityRotation(rack[weaponType][slot].object, position.rot.x, position.rot.y, position.rot.z)
 end
 
-local function fadeGun(rackId, slot)
+local function fadeGun(rackId, slot, weaponType)
     local rack = Racks[rackId]
     if not rack then return end
-    if rack.rifles[slot].object then
-        DeleteEntity(rack.rifles[slot].object)
+    local object = rack[weaponType][slot].object
+    if object then
+        DeleteEntity(object)
     end
 end
 
@@ -125,8 +153,15 @@ local function fadeGunRack(id)
     local rack = Racks[id]
     if DoesEntityExist(rack.object) then
         for i=1, #rack.rifles do
-            if rack.rifles[i].object then
-                DeleteEntity(rack.rifles[i].object)
+            local object = rack.rifles[i].object
+            if object then
+                DeleteEntity(object)
+            end
+        end
+        for i=1, #rack.pistols do
+            local object = rack.pistols[i].object
+            if object then
+                DeleteEntity(object)
             end
         end
         exports["qb-target"]:RemoveTargetEntity({rack.object})
@@ -153,10 +188,9 @@ local function displayPlayerWeapons(data)
                 metadata[#metadata+1] = {label = "Component", value = ox_items[v.metadata.components[i]].label}
             end
             metadata[#metadata+1] = {label = "Ammo", value = v.metadata.ammo}
-            metadata[#metadata+1] = {label = "Durability", value = v.metadata.durability}
+            metadata[#metadata+1] = {label = "Durability", value = v.metadata.durability..'%'}
             options[#options+1] = {
                 title = 'Store ' .. v.label,
-                description = 'Example button description',
                 onSelect = function()
                     storeWeapon(data.args.rack, v.slot, v.name)
                 end,
@@ -195,7 +229,27 @@ local function takeRackWeapons(data)
                 metadata[#metadata+1] = {label = "Component", value = ox_items[item.metadata.components[i]].label}
             end
             metadata[#metadata+1] = {label = "Ammo", value = item.metadata.ammo}
-            metadata[#metadata+1] = {label = "Durability", value = item.metadata.durability}
+            metadata[#metadata+1] = {label = "Durability", value = item.metadata.durability ..'%'}
+            options[#options+1] = {
+                
+                title = 'Take ' .. Config.rackableWeapons[item.name].label,
+                onSelect = function()
+                    takeWeapon(data.args.rack, i, item.name)
+                end,
+                metadata = metadata,
+            }
+        end
+    end
+
+    for i=1, #rack.pistols do
+        local item = rack.pistols[i]
+        if item.name then
+            local metadata = {}
+            for i=1, #item.metadata.components do
+                metadata[#metadata+1] = {label = "Component", value = ox_items[item.metadata.components[i]].label}
+            end
+            metadata[#metadata+1] = {label = "Ammo", value = item.metadata.ammo}
+            metadata[#metadata+1] = {label = "Durability", value = item.metadata.durability ..'%'}
             options[#options+1] = {
                 
                 title = 'Take ' .. Config.rackableWeapons[item.name].label,
@@ -246,7 +300,7 @@ local function spawnGunRack(id)
             {
                 label = 'Store Weapon',
                 name = 'gunrack:storeWeapon',
-                icon = 'fas fa-box',
+                icon = 'fa-solid fa-hand-holding',
                 distance = 1.5,
                 action = function()
                     displayPlayerWeapons({args = {rack = id}})
@@ -255,7 +309,7 @@ local function spawnGunRack(id)
             {
                 label = 'Take Weapon',
                 name = 'gunrack:takeWeapon',
-                icon = 'fas fa-box',
+                icon = 'fa-solid fa-hand-fist',
                 distance = 1.5,
                 action = function()
                     takeRackWeapons({args = {rack = id}})
@@ -264,7 +318,7 @@ local function spawnGunRack(id)
             {
                 label = 'Destroy Gun Rack',
                 name = 'gunrack:destroyGunRack',
-                icon = 'fas fa-box',
+                icon = 'fa-solid fa-trash-can',
                 distance = 1.5,
                 action = function()
                     destroyGunRack({args = {rack = id}})
@@ -281,7 +335,12 @@ local function spawnGunRack(id)
     rack.isRendered = true
     for i=1, #rack.rifles do
         if not rack.rifles[i].available then
-            spawnGun(id, i)
+            spawnGun(id, i, 'rifles')
+        end
+    end
+    for i=1, #rack.pistols do
+        if not rack.pistols[i].available then
+            spawnGun(id, i, 'pistols')
         end
     end
 end
@@ -426,16 +485,16 @@ RegisterNetEvent('js5m_gunrack:client:placeGunRack', function(id, data)
     Racks[id] = data
 end)
 
-RegisterNetEvent('js5m_gunrack:client:storeWeapon', function(rackIndex, rackSlot, data)
+RegisterNetEvent('js5m_gunrack:client:storeWeapon', function(rackIndex, rackSlot, rackType, data)
     if source == '' then return end
-    Racks[rackIndex].rifles[rackSlot] = data
-    spawnGun(rackIndex, rackSlot)
+    Racks[rackIndex][rackType][rackSlot] = data
+    spawnGun(rackIndex, rackSlot, rackType)
 end)
 
-RegisterNetEvent('js5m_gunrack:client:takeWeapon', function(rackIndex, rackSlot)
+RegisterNetEvent('js5m_gunrack:client:takeWeapon', function(rackIndex, rackSlot, rackType)
     if source == '' then return end
-    fadeGun(rackIndex, rackSlot)
-    Racks[rackIndex].rifles[rackSlot] = {name = nil, available = true}
+    fadeGun(rackIndex, rackSlot, rackType)
+    Racks[rackIndex][rackType][rackSlot] = {name = nil, available = true}
 end)
 
 RegisterNetEvent('js5m_gunrack:client:destroyGunRack', function(id)
@@ -455,6 +514,11 @@ AddEventHandler('onResourceStop', function(resourceName)
                 DeleteEntity(v.object)
             end
         end
+        for k, v in pairs(v.pistols) do
+            if v.object then
+                DeleteEntity(v.object)
+            end
+        end
         exports["qb-target"]:RemoveTargetEntity({v.object})
         DeleteEntity(v.object)
     end
@@ -468,6 +532,7 @@ AddEventHandler('onResourceStart', function(resourceName)
     Racks = lib.callback.await('js5m_gunrack:server:getRacks', false)
 end)
 
+-- print(json.encode(result, {indent=true}))
 
 CreateThread(function()
     while true do
