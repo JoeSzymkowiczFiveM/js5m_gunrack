@@ -24,7 +24,7 @@ You will need to add a `gunrack` item to your inventory items list.
 - [ox_lib](https://github.com/overextended/ox_lib)
 - qb-target - This was used because ox_target has backwards compatibility for qb-target, so it will work with that aswell.
 - [ox_inventory](https://github.com/overextended/ox_inventory)
-
+- [oxmysql](https://github.com/overextended/oxmysql)
 
 ## 👐 Credit
 
