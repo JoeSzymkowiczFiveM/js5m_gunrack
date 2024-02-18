@@ -20,10 +20,6 @@ You will need to add a `gunrack` item to your inventory items list.
 },
 ```
 
-## Make Your Own Tapes
-
-See the config for information about the tape items.
-
 ## Dependencies
 - [ox_lib](https://github.com/overextended/ox_lib)
 - qb-target - This was used because ox_target has backwards compatibility for qb-target, so it will work with that aswell.
