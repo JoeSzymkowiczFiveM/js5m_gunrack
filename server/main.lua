@@ -2,11 +2,7 @@ local ox_inventory = exports.ox_inventory
 local db = require 'server.db.mysql'
 -- local Racks = db.getAllGunRacks()
 
-local Racks = {}
-
-MySQL.ready(function()
-    Racks = db.getAllGunRacks()
-end)
+Racks = {}
 
 local function getRifleSlot(rack)
     for i=1, 5 do

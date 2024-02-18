@@ -34,4 +34,8 @@ function db.deleteGunRack(id)
     })
 end
 
+MySQL.ready(function()
+    Racks = db.getAllGunRacks()
+end)
+
 return db
