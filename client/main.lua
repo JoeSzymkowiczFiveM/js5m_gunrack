@@ -129,7 +129,7 @@ local function fadeGunRack(id)
                 DeleteEntity(rack.rifles[i].object)
             end
         end
-        exports.ox_target:removeLocalEntity(rack.object, {'gunrack:storeWeapon', 'gunrack:takeWeapon', 'gunrack:destroyGunRack'})
+        exports["qb-target"]:RemoveTargetEntity({rack.object})
         DeleteEntity(rack.object)
         rack.object = nil
         rack.isRendered = false
@@ -241,31 +241,37 @@ local function spawnGunRack(id)
     PlaceObjectOnGroundProperly(rack.object)
     FreezeEntityPosition(rack.object, true)
     
-    exports.ox_target:addLocalEntity(rack.object, {
-        {
-            label = 'Store Weapon',
-            name = 'gunrack:storeWeapon',
-            icon = 'fas fa-box',
-            distance = 1.5,
-            onSelect = displayPlayerWeapons,
-            args = {rack = id}
+    exports["qb-target"]:AddTargetEntity({rack.object}, {
+        options = {
+            {
+                label = 'Store Weapon',
+                name = 'gunrack:storeWeapon',
+                icon = 'fas fa-box',
+                distance = 1.5,
+                action = function()
+                    displayPlayerWeapons({args = {rack = id}})
+                end,
+            },
+            {
+                label = 'Take Weapon',
+                name = 'gunrack:takeWeapon',
+                icon = 'fas fa-box',
+                distance = 1.5,
+                action = function()
+                    takeRackWeapons({args = {rack = id}})
+                end,
+            },
+            {
+                label = 'Destroy Gun Rack',
+                name = 'gunrack:destroyGunRack',
+                icon = 'fas fa-box',
+                distance = 1.5,
+                action = function()
+                    destroyGunRack({args = {rack = id}})
+                end,
+            }
         },
-        {
-            label = 'Take Weapon',
-            name = 'gunrack:takeWeapon',
-            icon = 'fas fa-box',
-            distance = 1.5,
-            onSelect = takeRackWeapons,
-            args = {rack = id}
-        },
-        {
-            label = 'Destroy Gun Rack',
-            name = 'gunrack:destroyGunRack',
-            icon = 'fas fa-box',
-            distance = 1.5,
-            onSelect = destroyGunRack,
-            args = {rack = id}
-        }
+        distance = 1.5
     })
 
     for i = 0, 255, 51 do
@@ -449,7 +455,7 @@ AddEventHandler('onResourceStop', function(resourceName)
                 DeleteEntity(v.object)
             end
         end
-        exports.ox_target:removeLocalEntity(v.object, {'gunrack:storeWeapon', 'gunrack:takeWeapon', 'gunrack:destroyGunRack'})
+        exports["qb-target"]:RemoveTargetEntity({v.object})
         DeleteEntity(v.object)
     end
     if tempRackObj then
@@ -462,7 +468,6 @@ AddEventHandler('onResourceStart', function(resourceName)
     Racks = lib.callback.await('js5m_gunrack:server:getRacks', false)
 end)
 
--- print(json.encode(result, {indent=true}))
 
 CreateThread(function()
     while true do
