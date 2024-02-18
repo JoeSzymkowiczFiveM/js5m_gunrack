@@ -27,7 +27,7 @@ See the config for information about the tape items.
 ## Dependencies
 - [ox_lib](https://github.com/overextended/ox_lib)
 - qb-target - This was used because ox_target has backwards compatibility for qb-target, so it will work with that aswell.
-- [ox_inventory](https://github.com/overextended/ox_inventory) - Using my own fork of HyperSound as the original has been archived. Huge credit to charleshacks for creating this. It's a far-superior version of 3d sound than my original attempt.
+- [ox_inventory](https://github.com/overextended/ox_inventory)
 
 ## Discord
 [Joe Szymkowicz FiveM Development](https://discord.gg/5vPGxyCB4z)
