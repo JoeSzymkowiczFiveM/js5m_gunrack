@@ -388,11 +388,10 @@ exports('placeGunRack', function()
     FreezeEntityPosition(tempRackObj, true)
 
     PlacingObject = true
-    local plantCoords = nil
-    local plantHeading = nil
+    local rackCoords = nil
     local inRange = false
 
-    local function deletePlant()
+    local function deleteRack()
         PlacingObject = false
         SetEntityDrawOutline(tempRackObj, false)
         DeleteEntity(tempRackObj)
@@ -409,7 +408,7 @@ exports('placeGunRack', function()
     CreateThread(function()
         while PlacingObject do
             local hit, coords, entity = RayCastGamePlayCamera(20.0)
-            plantCoords = coords
+            rackCoords = coords
             DisableControlAction( 0, Keys["Q"], true ) -- cover
             DisableControlAction( 0, Keys["E"], true ) -- cover
 
@@ -419,7 +418,7 @@ exports('placeGunRack', function()
                 SetEntityDrawOutline(tempRackObj, true)
             end
 
-            if #(plantCoords - GetEntityCoords(cache.ped)) < 2.0 then
+            if #(rackCoords - GetEntityCoords(cache.ped)) < 2.0 then
                 SetEntityDrawOutlineColor(2, 241, 181, 255)
                 inRange = true
             else --not in range
@@ -428,7 +427,7 @@ exports('placeGunRack', function()
             end
 
             if IsControlPressed(0, Keys["X"]) then
-                deletePlant()
+                deleteRack()
                 PlacingObject = false
             end
             
@@ -445,17 +444,16 @@ exports('placeGunRack', function()
             SetEntityHeading(tempRackObj, heading)
             if IsControlJustPressed(0, Keys["ENTER"]) then
                 if not IsPedOnFoot(cache.ped) then
-                    deletePlant()
+                    deleteRack()
                     return
                 end
-                if not inRange then 
-                    -- QBCore.Functions.Notify('You are not close enough to plant', 'error', 3500)
-                    deletePlant()
+                if not inRange then
+                    deleteRack()
                     return
                 end
                 local rackRot = GetEntityHeading(tempRackObj)
                 local rackCoords = GetEntityCoords(tempRackObj)
-                deletePlant()
+                deleteRack()
 
                 TaskStartScenarioInPlace(cache.ped, "WORLD_HUMAN_HAMMERING", 0, true)
                 if lib.progressBar({
