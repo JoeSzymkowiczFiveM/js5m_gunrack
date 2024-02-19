@@ -17,10 +17,12 @@ end
 
 local function storeWeapon(rack, slot, name)
     TriggerServerEvent('js5m_gunrack:server:storeWeapon', rack, slot, name)
+    lib.showContext('js5m_gunrack_context')
 end
 
 local function takeWeapon(rack, rackSlot, name)
     TriggerServerEvent('js5m_gunrack:server:takeWeapon', rack, rackSlot, name)
+    lib.showContext('js5m_gunrack_context')
 end
 
 local function GetRackPositionOffset(rackIndex, slot, weapon)
@@ -174,7 +176,8 @@ local function displayPlayerWeapons(data)
     local registeredMenu = {
         id = 'js5m_gunrack_storeWeaponsMenu',
         title = 'Store Weapons',
-        options = {}
+        options = {},
+        menu = "js5m_gunrack_context"
     }
     local options = {}
 
@@ -215,7 +218,8 @@ local function takeRackWeapons(data)
     local registeredMenu = {
         id = 'js5m_gunrack_takeWeaponsMenu',
         title = 'Take Weapons',
-        options = {}
+        options = {},
+        menu = "js5m_gunrack_context"
     }
     local options = {}
 
@@ -284,6 +288,54 @@ local function destroyGunRack(data)
     TriggerServerEvent('js5m_gunrack:server:destroyGunRack', rack)
 end
 
+local function CodeCorrect(code)
+    if not code then return true end
+    local input = lib.inputDialog( "Enter Passcode", {
+        { type = 'input', password = true, label = "Passcode" , min = 1},
+    })
+    if not input then return end
+    if input[1] ~= code then
+        lib.notify({type = 'error', description = 'Invalid passcode'})
+        return false
+    end
+    return true
+end
+
+local function AccessRack(rackId)
+    local options = {
+        {
+            title = 'Store Weapon',
+            icon = 'fa-solid fa-hand-holding',
+            distance = 1.5,
+            onSelect = function()
+                displayPlayerWeapons({args = {rack = rackId}})
+            end,
+        },
+        {
+            title = 'Take Weapon',
+            icon = 'fa-solid fa-hand-fist',
+            distance = 1.5,
+            onSelect = function()
+                takeRackWeapons({args = {rack = rackId}})
+            end,
+        },
+        {
+            title = 'Destroy Gun Rack',
+            icon = 'fa-solid fa-trash-can',
+            distance = 1.5,
+            onSelect = function()
+                destroyGunRack({args = {rack = rackId}})
+            end,
+        }
+    }
+    lib.registerContext({
+        id = 'js5m_gunrack_context',
+        title = 'Gun Rack',
+        options = options,
+    })
+    lib.showContext('js5m_gunrack_context')
+end
+
 local function spawnGunRack(id)
     local rack = Racks[id]
     lib.requestModel(rackModel)
@@ -296,32 +348,15 @@ local function spawnGunRack(id)
     exports["qb-target"]:AddTargetEntity({rack.object}, {
         options = {
             {
-                label = 'Store Weapon',
+                label = 'Access Gunrack',
                 name = 'gunrack:storeWeapon',
                 icon = 'fa-solid fa-hand-holding',
                 distance = 1.5,
                 action = function()
-                    displayPlayerWeapons({args = {rack = id}})
+                    if not CodeCorrect(rack.code) then return end
+                    AccessRack(id)
                 end,
             },
-            {
-                label = 'Take Weapon',
-                name = 'gunrack:takeWeapon',
-                icon = 'fa-solid fa-hand-fist',
-                distance = 1.5,
-                action = function()
-                    takeRackWeapons({args = {rack = id}})
-                end,
-            },
-            {
-                label = 'Destroy Gun Rack',
-                name = 'gunrack:destroyGunRack',
-                icon = 'fa-solid fa-trash-can',
-                distance = 1.5,
-                action = function()
-                    destroyGunRack({args = {rack = id}})
-                end,
-            }
         },
         distance = 1.5
     })
@@ -454,7 +489,22 @@ exports('placeGunRack', function()
                 local rackRot = GetEntityHeading(tempRackObj)
                 local rackCoords = GetEntityCoords(tempRackObj)
                 deleteRack()
-
+                local alert = lib.alertDialog({
+                    header = 'Set Passcode?',
+                    content = 'Would you like to set a passcode for this gun rack?',
+                    centered = true,
+                    cancel = true
+                })
+                local passcode = nil
+                if alert == 'confirm' then
+                    local input = lib.inputDialog( "Enter Passcode", {
+                        { type = 'input', password = true, label = "Passcode" , min = 1},
+                    })
+                    if not input then
+                        return
+                    end
+                    passcode = input[1]
+                end
                 TaskStartScenarioInPlace(cache.ped, "WORLD_HUMAN_HAMMERING", 0, true)
                 if lib.progressBar({
                     duration = 10000,
@@ -466,7 +516,7 @@ exports('placeGunRack', function()
                     },
                 }) then
                     ClearPedTasks(cache.ped)
-                    TriggerServerEvent('js5m_gunrack:server:placeGunRack', rackCoords, rackRot)
+                    TriggerServerEvent('js5m_gunrack:server:placeGunRack', rackCoords, rackRot, passcode)
                 else
                     ClearPedTasks(cache.ped)
                 end

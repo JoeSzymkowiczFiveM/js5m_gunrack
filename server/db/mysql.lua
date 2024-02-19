@@ -9,6 +9,7 @@ function db.getAllGunRacks()
             coords = json.decode(v.coords),
             rifles = json.decode(v.rifles),
             pistols = json.decode(v.pistols),
+            code = v.code or nil,
             taser = v.taser == 1 and true or false
         }
     end
@@ -16,10 +17,11 @@ function db.getAllGunRacks()
 end
 
 function db.createGunRack(gunrackInfo)
-    return MySQL.Sync.insert('INSERT INTO gunracks (coords, rifles, pistols, taser) VALUES (@coords, @rifles, @pistols, @taser)', {
+    return MySQL.Sync.insert('INSERT INTO gunracks (coords, rifles, pistols, code, taser) VALUES (@coords, @rifles, @pistols, @code, @taser)', {
         ['@coords'] = json.encode(gunrackInfo.coords),
         ['@rifles'] = json.encode(gunrackInfo.rifles),
         ['@pistols'] = json.encode(gunrackInfo.pistols),
+        ['@code'] = gunrackInfo.code,
         ['@taser'] = gunrackInfo.taser and '1' or '0'
     })
 end
