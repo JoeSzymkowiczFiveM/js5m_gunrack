@@ -456,8 +456,8 @@ exports('placeGunRack', function()
             SetEntityHeading(tempRackObj, heading)
             if IsControlJustPressed(0, Keys["ENTER"]) then
 
-                local input = lib.inputDialog('Dialog title', {
-                    {type = 'input', label = 'Text input', description = 'Some input description', required = true, min = 4, max = 16},
+               local input = lib.inputDialog('Gun racks', {
+                    {type = 'input', label = 'Required job', description = 'Here put a required job ("null" if not restriced for job)', required = true, min = 4, max = 16},
                 })
 
                 local job = input[1]
