@@ -31,6 +31,7 @@ A huge thank you to [FjamZoo](https://github.com/FjamZoo) for his research and w
 
 
 ## ✅ TODO
+- PRs are always welcome to add more weapons to the config. I'm sure I'm missing some.
 - Add taser/ammo/armor storage
 - Optimize offsets and rotations
 - Add `prop_cs_gunrack` functionality
