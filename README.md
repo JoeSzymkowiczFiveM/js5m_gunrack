@@ -35,5 +35,15 @@ A huge thank you to [FjamZoo](https://github.com/FjamZoo) for his research and w
 - Optimize offsets and rotations
 - Add `prop_cs_gunrack` functionality
 
+
+## Preview
+Rack Placement
+
+https://streamable.com/c98cv3
+
+Store and Take Weapons
+
+https://streamable.com/86msx5
+
 ## Discord
 [Joe Szymkowicz FiveM Development](https://discord.gg/5vPGxyCB4z)
