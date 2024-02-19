@@ -20,7 +20,7 @@ Config.rackableWeapons = {
     ['WEAPON_SMG_MK2'] = {offset = {z = 0.50}, rotation = {z = 90.0}, weaponType = 'rifles'},
     ['WEAPON_ASSAULTSMG'] = {offset = {z = 0.75}, rotation = {z = 90.0}, weaponType = 'rifles'},
     ['WEAPON_COMBATPDW'] = {offset = {z = 0.7}, rotation = {z = 90.0}, weaponType = 'rifles'},
-    ['WEAPON_MACHINEPISTOL'] = {offset = {z = 0.7}, rotation = {z = 90.0}, weaponType = 'pistols'},
+    ['WEAPON_MACHINEPISTOL'] = {offset = {z = 1.36}, rotation = {x = 270.0, y = 1.0, z = 320.0}, weaponType = 'pistols'},
     ['WEAPON_MINISMG'] = {offset = {z = 0.50}, rotation = {z = 90.0}, weaponType = 'rifles'},
     ['WEAPON_ASSAULTRIFLE'] = {offset = {z = 0.65}, rotation = {z = 90.0}, weaponType = 'rifles'},
     ['WEAPON_ASSAULTRIFLE_MK2'] = {offset = {z = 0.75}, rotation = {z = 90.0}, weaponType = 'rifles'},
