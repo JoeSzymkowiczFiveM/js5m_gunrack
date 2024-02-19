@@ -23,7 +23,7 @@ local function inDistanceOfGunRack(id, src)
     return false
 end
 
-RegisterServerEvent('js5m_gunrack:server:placeGunRack', function(coords, rot)
+RegisterServerEvent('js5m_gunrack:server:placeGunRack', function(coords, rot, job)
     local src = source
     local ped = GetPlayerPed(src)
     local sourceCoords = GetEntityCoords(ped)
@@ -35,6 +35,7 @@ RegisterServerEvent('js5m_gunrack:server:placeGunRack', function(coords, rot)
             rifles = {},
             pistols = {},
             taser = false,
+            job = job,
         }
         local insertedId = db.createGunRack(rackData)
         Racks[insertedId] = rackData
