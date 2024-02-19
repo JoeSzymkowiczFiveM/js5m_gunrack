@@ -1,7 +1,6 @@
 local ox_inventory = exports.ox_inventory
 local Racks = {}
 local RenderDistance = 150
---prop_cs_gunrack
 local rackModel = `xm_prop_xm_gunlocker_01a`
 local tempRackObj = nil
 
@@ -180,7 +179,6 @@ local function displayPlayerWeapons(data)
     local options = {}
 
     local items = ox_inventory:GetPlayerItems()
-    -- print(json.encode(items, {indent=true}))
     for k, v in pairs(items) do
         if Config.rackableWeapons[v.name] then
             local metadata = {}
@@ -531,8 +529,6 @@ AddEventHandler('onClientResourceStart', function(resourceName)
     if GetCurrentResourceName() ~= resourceName then return end
     Racks = lib.callback.await('js5m_gunrack:server:getRacks', false)
 end)
-
--- print(json.encode(result, {indent=true}))
 
 CreateThread(function()
     while true do
