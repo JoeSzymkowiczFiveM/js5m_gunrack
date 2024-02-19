@@ -1,4 +1,5 @@
 local db = {}
+local MySQL = MySQL
 
 function db.getAllGunRacks()
     local responseRacks = {}
@@ -7,6 +8,7 @@ function db.getAllGunRacks()
         responseRacks[v.id] = {
             coords = json.decode(v.coords),
             rifles = json.decode(v.rifles),
+            pistols = json.decode(v.pistols),
             taser = v.taser == 1 and true or false
         }
     end
@@ -21,7 +23,15 @@ function db.createGunRack(gunrackInfo)
     })
 end
 
-function db.saveGunRack(id, gunrackInfo)
+function db.saveGunRack(id, gunrackInfo, weaponType)
+    if weaponType == 'pistols' then
+        MySQL.Async.execute('UPDATE gunracks SET pistols = @pistols WHERE id = @id', {
+            ['@pistols'] = json.encode(gunrackInfo.pistols),
+            ['@id'] = id
+        })
+        return
+    end
+    
     MySQL.Async.execute('UPDATE gunracks SET rifles = @rifles WHERE id = @id', {
         ['@rifles'] = json.encode(gunrackInfo.rifles),
         ['@id'] = id

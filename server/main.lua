@@ -59,7 +59,7 @@ RegisterServerEvent('js5m_gunrack:server:storeWeapon', function(rackIndex, weapo
                 metadata = slot.metadata
             }
             rackInfo[weaponType][rackSlot] = data
-            db.saveGunRack(rackIndex, rackInfo)
+            db.saveGunRack(rackIndex, rackInfo, weaponType)
             TriggerClientEvent('js5m_gunrack:client:storeWeapon', -1, rackIndex, rackSlot, weaponType, data)
         else
             TriggerClientEvent('ox_lib:notify', src, {
@@ -82,7 +82,7 @@ RegisterServerEvent('js5m_gunrack:server:takeWeapon', function(rackIndex, rackSl
     if ox_inventory:AddItem(src, weaponName, 1, Racks[rackIndex][weaponType][rackSlot].metadata) then
         local rackInfo = Racks[rackIndex]
         rackInfo[weaponType][rackSlot] = {name = nil, available = true}
-        db.saveGunRack(rackIndex, rackInfo)
+        db.saveGunRack(rackIndex, rackInfo, weaponType)
         TriggerClientEvent('js5m_gunrack:client:takeWeapon', -1, rackIndex, rackSlot, weaponType)
     else
     end
