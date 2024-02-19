@@ -23,8 +23,10 @@ function db.createGunRack(gunrackInfo)
     return id
 end
 
-function db.saveGunRack(id, gunrackInfo)
-    ludb:save("gunracks/"..id, gunrackInfo)
+function db.saveGunRack(id, gunrackInfo, weaponType)
+    local result = ludb:retrieve("gunracks/"..id)
+    result[weaponType] = gunrackInfo[weaponType]
+    ludb:save("gunracks/"..id, result)
 end
 
 function db.deleteGunRack(id)
