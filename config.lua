@@ -38,10 +38,4 @@ Config.rackableWeapons = {
     ['WEAPON_HEAVYSNIPER'] = {offset = {z = 0.72}, rotation = {z = 90.0}, weaponType = 'rifles'},
     ['WEAPON_MARKSMANRIFLE'] = {offset = {z = 0.72}, rotation = {z = 90.0}, weaponType = 'rifles'},
     ['WEAPON_MARKSMANRIFLE_MK2'] = {offset = {z = 0.72}, rotation = {z = 90.0}, weaponType = 'rifles'},
-    -- ['WEAPON_RPG'] = {label = 'RPG', model = 'w_lr_rpg', offset = {z = 0.1}},
-    -- ['WEAPON_GRENADELAUNCHER'] = {label = 'Grenade Launcher', model = 'w_lr_grenadelauncher', offset = {z = 0.1}},
-    -- ['WEAPON_GRENADELAUNCHER_SMOKE'] = {label = 'Smoke Grenade Launcher', model = 'w_lr_grenadelaunchersmoke', offset = {z = 0.1}},
-    -- ['WEAPON_MINIGUN'] = {label = 'Minigun', model = 'w_mg_minigun', offset = {z = 0.1}},
-    -- ['WEAPON_FIREWORK'] = {label = 'Firework Launcher', model = 'w_lr_firework', offset = {z = 0.1}},
-    -- ['WEAPON_RAILGUN'] = {label = 'Railgun', model = 'w_ar_railgun', offset = {z = 0.1}},
 }
