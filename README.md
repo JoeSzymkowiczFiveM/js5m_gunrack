@@ -31,7 +31,8 @@ A huge thank you to [FjamZoo](https://github.com/FjamZoo) for his research and w
 
 
 ## ✅ TODO
-- Add taser/ammo/armor storage
+- Make stun gun its own space
+- Add ammo/armor storage spaces
 - Optimize offsets and rotations
 - Add `prop_cs_gunrack` functionality
 

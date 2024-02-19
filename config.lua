@@ -1,6 +1,7 @@
 Config = {}
 
 Config.rackableWeapons = {
+    ['WEAPON_STUNGUN'] = {offset = {z = 1.36}, rotation = {x = 270.0, y = 1.0, z = 320.0}, weaponType = 'pistols'},
     ['WEAPON_PISTOL'] = {offset = {z = 1.36}, rotation = {x = 270.0, y = 1.0, z = 320.0}, weaponType = 'pistols'},
     ['WEAPON_PISTOL_MK2'] = {offset = {z = 1.36}, rotation = {x = 270.0, y = 1.0, z = 320.0}, weaponType = 'pistols'},
     ['WEAPON_COMBATPISTOL'] = {offset = {z = 1.36}, rotation = {x = 270.0, y = 1.0, z = 320.0}, weaponType = 'pistols'},
