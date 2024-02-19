@@ -28,7 +28,7 @@ You will need to add a `gunrack` item to your inventory items list.
 
 ## 👐 Credit
 
-A huge thank you to [FjamZoo](https://github.com/FjamZoo) for his research and work with weapons components and skins. Also, huge shoutout to the [Overextended](https://github.com/overextended) for their continued work on the ox resources. Keep FiveM free! A big thank you to the guy that was selling roughly this same thing for €120 on the Releases forum, for the motivation to work on this.
+A huge thank you to [FjamZoo](https://github.com/FjamZoo) for his research and work with weapons components and skins. Thanks to [Snipe](https://github.com/pushkart2) for writing the MySQL module code for this. Also, huge shoutout to the [Overextended](https://github.com/overextended) group for their continued work on the ox resources. A big thank you to the guy that was selling roughly this same thing for €120 on the Releases forum, for the motivation to work on this. Keep FiveM free!
 
 ## Discord
 [Joe Szymkowicz FiveM Development](https://discord.gg/5vPGxyCB4z)
