@@ -2,7 +2,7 @@ Racks = {}
 local ox_inventory = exports.ox_inventory
 local db = require 'server.db.mysql'
 
-local function getRifleSlot(rack, weaponName)
+local function getWeaponSlot(rack, weaponName)
     local weaponType = Config.rackableWeapons[weaponName].weaponType
     if not weaponType then return false end
     for i=1, 5 do
@@ -47,7 +47,7 @@ RegisterServerEvent('js5m_gunrack:server:storeWeapon', function(rackIndex, weapo
     if not inDistanceOfGunRack(rackIndex, src) then return end
     if not Config.rackableWeapons[weaponName] then return end
     local weaponType = Config.rackableWeapons[weaponName].weaponType
-    local rackSlot = getRifleSlot(rackIndex, weaponName)
+    local rackSlot = getWeaponSlot(rackIndex, weaponName)
     if rackSlot then
         local slot = exports.ox_inventory:GetSlot(src, weaponSlot)
         if slot.name ~= weaponName then return end
@@ -69,7 +69,7 @@ RegisterServerEvent('js5m_gunrack:server:storeWeapon', function(rackIndex, weapo
         end
     else
         TriggerClientEvent('ox_lib:notify', src, {
-            description = 'No more rifle slots left',
+            description = 'No more slots of that type left',
             type = 'error'
         })
     end
