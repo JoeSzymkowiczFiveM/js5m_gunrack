@@ -284,6 +284,8 @@ local function destroyGunRack(data)
     TriggerServerEvent('js5m_gunrack:server:destroyGunRack', rack)
 end
 
+local rackJob = nil
+
 local function spawnGunRack(id)
     local rack = Racks[id]
     lib.requestModel(rackModel)
@@ -292,6 +294,12 @@ local function spawnGunRack(id)
     SetEntityAlpha(rack.object, 0)
     PlaceObjectOnGroundProperly(rack.object)
     FreezeEntityPosition(rack.object, true)
+
+    if rack.job == "null" then 
+        rackJob = nil
+    else 
+        rackJob = rack.job
+    end
     
     exports["qb-target"]:AddTargetEntity({rack.object}, {
         options = {
@@ -300,6 +308,7 @@ local function spawnGunRack(id)
                 name = 'gunrack:storeWeapon',
                 icon = 'fa-solid fa-hand-holding',
                 distance = 1.5,
+                job = rackJob,
                 action = function()
                     displayPlayerWeapons({args = {rack = id}})
                 end,
@@ -309,6 +318,7 @@ local function spawnGunRack(id)
                 name = 'gunrack:takeWeapon',
                 icon = 'fa-solid fa-hand-fist',
                 distance = 1.5,
+                job = rackJob,
                 action = function()
                     takeRackWeapons({args = {rack = id}})
                 end,
@@ -318,6 +328,7 @@ local function spawnGunRack(id)
                 name = 'gunrack:destroyGunRack',
                 icon = 'fa-solid fa-trash-can',
                 distance = 1.5,
+                job = rackJob,
                 action = function()
                     destroyGunRack({args = {rack = id}})
                 end,
@@ -374,6 +385,7 @@ local function RayCastGamePlayCamera(distance)
 end
 
 local PlacingObject = false
+
 exports('placeGunRack', function()
     if PlacingObject then return end
     local playerCoords = GetEntityCoords(cache.ped)
@@ -443,6 +455,13 @@ exports('placeGunRack', function()
 
             SetEntityHeading(tempRackObj, heading)
             if IsControlJustPressed(0, Keys["ENTER"]) then
+
+                local input = lib.inputDialog('Dialog title', {
+                    {type = 'input', label = 'Text input', description = 'Some input description', required = true, min = 4, max = 16},
+                })
+
+                local job = input[1]
+
                 if not IsPedOnFoot(cache.ped) then
                     deleteRack()
                     return
@@ -466,7 +485,7 @@ exports('placeGunRack', function()
                     },
                 }) then
                     ClearPedTasks(cache.ped)
-                    TriggerServerEvent('js5m_gunrack:server:placeGunRack', rackCoords, rackRot)
+                    TriggerServerEvent('js5m_gunrack:server:placeGunRack', rackCoords, rackRot, job)
                 else
                     ClearPedTasks(cache.ped)
                 end
