@@ -3,7 +3,7 @@
 This is a script to place a gun rack in the world, and use it for storing weapons.
 
 ## 👀 Usage
-Use the included sql script to create the required table and add the snippet below to create the item. Use the `gunrack` item in your inventory to start the placement process. Once you've placed the rack, you can then target the rack to store weapons in it, or take weapons from it.
+Use the included sql script to create the required table and add the snippet below to create the item. Use the `gunrack` item in your inventory to start the placement process. Once you've placed the rack, you can then target the rack to store weapons in it, or take weapons from it. Optionally, you can set a passcode on the gunrack to limit access to it.
 
 ## 📚 Items
 You will need to add a `gunrack` item to your inventory items list.
