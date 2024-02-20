@@ -46,6 +46,8 @@ end)
 RegisterServerEvent('js5m_gunrack:server:storeWeapon', function(rackIndex, weaponSlot, weaponName)
     local src = source
     if not inDistanceOfGunRack(rackIndex, src) then return end
+    while Racks[rackIndex].busy do Wait(10) end
+    Racks[rackIndex].busy = true
     if not Config.rackableWeapons[weaponName] then return end
     local weaponType = Config.rackableWeapons[weaponName].weaponType
     local rackSlot = getWeaponSlot(rackIndex, weaponName)
@@ -74,19 +76,29 @@ RegisterServerEvent('js5m_gunrack:server:storeWeapon', function(rackIndex, weapo
             type = 'error'
         })
     end
+    Racks[rackIndex].busy = false
 end)
 
 RegisterServerEvent('js5m_gunrack:server:takeWeapon', function(rackIndex, rackSlot, weaponName)
     local src = source
     if not inDistanceOfGunRack(rackIndex, src) then return end
+    while Racks[rackIndex].busy do Wait(10) end
+    Racks[rackIndex].busy = true
     local weaponType = Config.rackableWeapons[weaponName].weaponType
-    if ox_inventory:AddItem(src, weaponName, 1, Racks[rackIndex][weaponType][rackSlot].metadata) then
-        local rackInfo = Racks[rackIndex]
-        rackInfo[weaponType][rackSlot] = {name = nil, available = true}
-        db.saveGunRack(rackIndex, rackInfo, weaponType)
-        TriggerClientEvent('js5m_gunrack:client:takeWeapon', -1, rackIndex, rackSlot, weaponType)
+    if Racks[rackIndex][weaponType][rackSlot].name == weaponName then
+        if ox_inventory:AddItem(src, weaponName, 1, Racks[rackIndex][weaponType][rackSlot].metadata) then
+            local rackInfo = Racks[rackIndex]
+            rackInfo[weaponType][rackSlot] = {name = nil, available = true}
+            db.saveGunRack(rackIndex, rackInfo, weaponType)
+            TriggerClientEvent('js5m_gunrack:client:takeWeapon', -1, rackIndex, rackSlot, weaponType)
+        end
     else
+        TriggerClientEvent('ox_lib:notify', src, {
+            description = 'That weapon does not seem to be in this rack',
+            type = 'error'
+        })
     end
+    Racks[rackIndex].busy = false
 end)
 
 RegisterServerEvent('js5m_gunrack:server:destroyGunRack', function(rackIndex)
