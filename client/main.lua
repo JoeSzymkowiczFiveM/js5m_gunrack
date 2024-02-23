@@ -413,7 +413,7 @@ exports('placeGunRack', function()
     if PlacingObject then return end
     local playerCoords = GetEntityCoords(cache.ped)
     lib.requestModel(rackModel)
-    tempRackObj = CreateObject(rackModel, playerCoords.x, playerCoords.y, playerCoords.z, true, true, false)
+    tempRackObj = CreateObject(rackModel, playerCoords.x, playerCoords.y, playerCoords.z, false, false, false)
     local heading = 0.0
     SetEntityHeading(tempRackObj, 0)
     
