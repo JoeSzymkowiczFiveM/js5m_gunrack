@@ -190,6 +190,9 @@ local function displayPlayerWeapons(data)
             end
             metadata[#metadata+1] = {label = "Ammo", value = v.metadata.ammo}
             metadata[#metadata+1] = {label = "Durability", value = v.metadata.durability..'%'}
+            if v.metadata.serial then
+                metadata[#metadata+1] = {label = "Serial Number", value = v.metadata.serial}
+            end
             options[#options+1] = {
                 title = 'Store ' .. v.label,
                 onSelect = function()
@@ -232,6 +235,9 @@ local function takeRackWeapons(data)
             end
             metadata[#metadata+1] = {label = "Ammo", value = item.metadata.ammo}
             metadata[#metadata+1] = {label = "Durability", value = item.metadata.durability ..'%'}
+            if item.metadata.serial then
+                metadata[#metadata+1] = {label = "Serial Number", value = item.metadata.serial}
+            end
             options[#options+1] = {
                 
                 title = 'Take ' .. Config.rackableWeapons[item.name].label,
