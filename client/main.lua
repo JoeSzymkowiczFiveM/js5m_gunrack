@@ -165,7 +165,7 @@ local function fadeGunRack(id)
                 DeleteEntity(object)
             end
         end
-        exports["qb-target"]:RemoveTargetEntity({rack.object})
+        exports.ox_target:removeLocalEntity(rack.object)
         DeleteEntity(rack.object)
         rack.object = nil
         rack.isRendered = false
@@ -350,21 +350,19 @@ local function spawnGunRack(id)
     SetEntityAlpha(rack.object, 0)
     PlaceObjectOnGroundProperly(rack.object)
     FreezeEntityPosition(rack.object, true)
-    
-    exports["qb-target"]:AddTargetEntity({rack.object}, {
-        options = {
-            {
-                label = 'Access Gunrack',
-                name = 'gunrack:storeWeapon',
-                icon = 'fa-solid fa-hand-holding',
-                distance = 1.5,
-                action = function()
-                    if not CodeCorrect(rack.code) then return end
-                    AccessRack(id)
-                end,
-            },
+    SetModelAsNoLongerNeeded(rack.object)
+
+    exports.ox_target:addLocalEntity(rack.object, {
+        {
+            label = 'Access Gunrack',
+            name = 'gunrack:storeWeapon',
+            icon = 'fa-solid fa-hand-holding',
+            distance = 1.5,
+            onSelect = function()
+                if not CodeCorrect(rack.code) then return end
+                AccessRack(id)
+            end,
         },
-        distance = 1.5
     })
 
     for i = 0, 255, 51 do
@@ -571,7 +569,7 @@ AddEventHandler('onResourceStop', function(resourceName)
                 DeleteEntity(v.object)
             end
         end
-        exports["qb-target"]:RemoveTargetEntity({v.object})
+        exports.ox_target:removeLocalEntity(v.object)
         DeleteEntity(v.object)
     end
     if tempRackObj then
