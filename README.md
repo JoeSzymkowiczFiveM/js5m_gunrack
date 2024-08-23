@@ -22,7 +22,7 @@ You will need to add a `gunrack` item to your inventory items list.
 
 ## 🔗 Dependencies
 - [ox_lib](https://github.com/overextended/ox_lib)
-- qb-target / [ox_target](https://github.com/overextended/ox_target)
+- [ox_target](https://github.com/overextended/ox_target)
 - [ox_inventory](https://github.com/overextended/ox_inventory)
 - [oxmysql](https://github.com/overextended/oxmysql)
 
