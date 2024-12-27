@@ -115,30 +115,51 @@ local function getWeaponComponents(name, hash, components)
     return varMod, weaponComponents, hadClip
 end
 
+local showDefaultsOverride = {
+    ['WEAPON_STUNGUN'] = true,
+}
+
 local function spawnGun(rackId, slot, weaponType)
     local rack = Racks[rackId]
-    if not rack then return end
+    if not rack or not rack[weaponType][slot] then return end
 
-    local position = GetRackPositionOffset(rackId, slot, rack[weaponType][slot].name)
-    local hash = GetHashKey(rack[weaponType][slot].name)
-    lib.requestWeaponAsset(hash, 5000, 31, 0)
-    rack[weaponType][slot].object = CreateWeaponObject(hash, 50, position.offset.x, position.offset.y, position.offset.z, hasLuxeMod and true or false, 1.0, 0)
-    while not DoesEntityExist(rack[weaponType][slot].object) do Wait(1) end
-    SetEntityCoords(rack[weaponType][slot].object, position.offset.x, position.offset.y, position.offset.z, false, false, false, true)
-    local hasLuxeMod, components, hadClip = getWeaponComponents(rack[weaponType][slot].name, hash, rack[weaponType][slot].metadata.components)
-    if hasLuxeMod then
-        lib.requestModel(hasLuxeMod, 500)
-    end
-    if components then
-        for i = 1, #components do
-            GiveWeaponComponentToWeaponObject(rack[weaponType][slot].object, components[i])
+    local rackSlot = rack[weaponType][slot]
+    local modelHash = GetHashKey(rackSlot.name)
+
+    local _, hash = pcall(function()
+		return lib.requestWeaponAsset(modelHash, 5000, 31, 0)
+	end)
+
+    if hash and hash ~= 0 then
+        local hasLuxeMod, components, hadClip = getWeaponComponents(rackSlot.name, hash, rackSlot.metadata.components)
+        if hasLuxeMod then
+            lib.requestModel(hasLuxeMod, 500)
         end
+
+        local showDefault = true
+
+        if (hasLuxeMod and hadClip) or showDefaultsOverride[rackSlot.name] then
+            showDefault = false
+        end
+
+        local position = GetRackPositionOffset(rackId, slot, rackSlot.name)
+        lib.requestWeaponAsset(hash, 5000, 31, 0)
+        rackSlot.object = CreateWeaponObject(hash, 50, position.offset.x, position.offset.y, position.offset.z, showDefault, 1.0, hasLuxeMod or 0, false, true)
+        while not DoesEntityExist(rackSlot.object) do Wait(1) end
+        SetEntityCoords(rackSlot.object, position.offset.x, position.offset.y, position.offset.z, false, false, false, true)
+        
+        if components then
+            for i = 1, #components do
+                GiveWeaponComponentToWeaponObject(rackSlot.object, components[i])
+            end
+        end
+
+        if rackSlot.tint then
+            SetWeaponObjectTintIndex(rackSlot.object, rackSlot.tint)
+        end
+        FreezeEntityPosition(rackSlot.object, true)
+        SetEntityRotation(rackSlot.object, position.rot.x, position.rot.y, position.rot.z)
     end
-    if rack[weaponType][slot].tint then
-        SetWeaponObjectTintIndex(rack[weaponType][slot].object, rack[weaponType][slot].tint)
-    end
-    FreezeEntityPosition(rack[weaponType][slot].object, true)
-    SetEntityRotation(rack[weaponType][slot].object, position.rot.x, position.rot.y, position.rot.z)
 end
 
 local function fadeGun(rackId, slot, weaponType)
