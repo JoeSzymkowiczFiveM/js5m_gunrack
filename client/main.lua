@@ -142,10 +142,10 @@ local function spawnGun(rackId, slot, weaponType)
 
         local position = GetRackPositionOffset(rackId, slot, rackSlot.name)
         lib.requestWeaponAsset(hash, 5000, 31, 0)
-        rackSlot.object = CreateWeaponObject(hash, 50, position.offset.x, position.offset.y, position.offset.z, showDefault, 1.0, hasLuxeMod or 0)
+        rackSlot.object = CreateWeaponObject(hash, 50, position.offset.x, position.offset.y, position.offset.z, showDefault, 1.0, hasLuxeMod or 0, false, true)
         while not DoesEntityExist(rackSlot.object) do Wait(1) end
         SetEntityCoords(rackSlot.object, position.offset.x, position.offset.y, position.offset.z, false, false, false, true)
-
+        
         if components then
             for i = 1, #components do
                 GiveWeaponComponentToWeaponObject(rackSlot.object, components[i])
