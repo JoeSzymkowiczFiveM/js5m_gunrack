@@ -1,14 +1,14 @@
 local ludb = exports['0xludb-fivem']
 local db = {}
 
-local table = {
+local idTables = {
     'gunracks',
 }
 
-for i=1, #table do
-    local result = ludb:retrieveGlobal("ids/"..table[i])
+for i=1, #idTables do
+    local result = ludb:retrieveGlobal("ids/"..idTables[i])
     if not result then
-        ludb:saveGlobal("ids/"..table[i], 1)
+        ludb:saveGlobal("ids/"..idTables[i], 1)
     end
 end
 

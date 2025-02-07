@@ -1,6 +1,6 @@
 local ox_inventory = exports.ox_inventory
 local Racks = {}
-local RenderDistance = 150
+local RenderDistance = 200
 local rackModel = `xm_prop_xm_gunlocker_01a`
 local tempRackObj = nil
 
@@ -100,7 +100,6 @@ local function getWeaponComponents(name, hash, components)
                 if weaponComp.type == 'magazine' then
                     hadClip = true
                 end
-
                 break
             end
         end
@@ -111,34 +110,54 @@ local function getWeaponComponents(name, hash, components)
         weaponComponents[amount] = joaat(('COMPONENT_%s_CLIP_01'):format(name:sub(8)))
     end
 
-
     return varMod, weaponComponents, hadClip
 end
 
+local showDefaultsOverride = {
+    ['WEAPON_STUNGUN'] = true,
+}
+
 local function spawnGun(rackId, slot, weaponType)
     local rack = Racks[rackId]
-    if not rack then return end
+    if not rack or not rack[weaponType][slot] then return end
 
-    local position = GetRackPositionOffset(rackId, slot, rack[weaponType][slot].name)
-    local hash = GetHashKey(rack[weaponType][slot].name)
-    lib.requestWeaponAsset(hash, 5000, 31, 0)
-    rack[weaponType][slot].object = CreateWeaponObject(hash, 50, position.offset.x, position.offset.y, position.offset.z, true, 1.0, 0)
-    while not DoesEntityExist(rack[weaponType][slot].object) do Wait(1) end
-    SetEntityCoords(rack[weaponType][slot].object, position.offset.x, position.offset.y, position.offset.z, false, false, false, true)
-    local hasLuxeMod, components, hadClip = getWeaponComponents(rack[weaponType][slot].name, hash, rack[weaponType][slot].metadata.components)
-    if hasLuxeMod then
-        lib.requestModel(hasLuxeMod, 500)
-    end
-    if components then
-        for i = 1, #components do
-            GiveWeaponComponentToWeaponObject(rack[weaponType][slot].object, components[i])
+    local rackSlot = rack[weaponType][slot]
+    local modelHash = GetHashKey(rackSlot.name)
+
+    local _, hash = pcall(function()
+		return lib.requestWeaponAsset(modelHash, 5000, 31, 0)
+	end)
+
+    if hash and hash ~= 0 then
+        local hasLuxeMod, components, hadClip = getWeaponComponents(rackSlot.name, hash, rackSlot.metadata.components)
+        if hasLuxeMod then
+            lib.requestModel(hasLuxeMod, 500)
         end
+
+        local showDefault = true
+
+        if (hasLuxeMod and hadClip) or showDefaultsOverride[rackSlot.name] then
+            showDefault = false
+        end
+
+        local position = GetRackPositionOffset(rackId, slot, rackSlot.name)
+        lib.requestWeaponAsset(hash, 5000, 31, 0)
+        rackSlot.object = CreateWeaponObject(hash, 50, position.offset.x, position.offset.y, position.offset.z, showDefault, 1.0, hasLuxeMod or 0)
+        while not DoesEntityExist(rackSlot.object) do Wait(1) end
+        SetEntityCoords(rackSlot.object, position.offset.x, position.offset.y, position.offset.z, false, false, false, true)
+
+        if components then
+            for i = 1, #components do
+                GiveWeaponComponentToWeaponObject(rackSlot.object, components[i])
+            end
+        end
+
+        if rackSlot.tint then
+            SetWeaponObjectTintIndex(rackSlot.object, rackSlot.tint)
+        end
+        FreezeEntityPosition(rackSlot.object, true)
+        SetEntityRotation(rackSlot.object, position.rot.x, position.rot.y, position.rot.z)
     end
-    if rack[weaponType][slot].tint then
-        SetWeaponObjectTintIndex(rack[weaponType][slot].object, rack[weaponType][slot].tint)
-    end
-    FreezeEntityPosition(rack[weaponType][slot].object, true)
-    SetEntityRotation(rack[weaponType][slot].object, position.rot.x, position.rot.y, position.rot.z)
 end
 
 local function fadeGun(rackId, slot, weaponType)
@@ -165,7 +184,7 @@ local function fadeGunRack(id)
                 DeleteEntity(object)
             end
         end
-        exports["qb-target"]:RemoveTargetEntity({rack.object})
+        exports.ox_target:removeLocalEntity(rack.object)
         DeleteEntity(rack.object)
         rack.object = nil
         rack.isRendered = false
@@ -211,7 +230,7 @@ local function displayPlayerWeapons(data)
     end
 
     registeredMenu["options"] = options
-    
+
     lib.registerContext(registeredMenu)
     lib.showContext('js5m_gunrack_storeWeaponsMenu')
 end
@@ -290,7 +309,9 @@ local function destroyGunRack(data)
         centered = true,
         cancel = true
     })
-    if confirm ~= 'confirm' then return end
+    
+    if confirm ~= 'cancel' then return end
+
     TriggerServerEvent('js5m_gunrack:server:destroyGunRack', rack)
 end
 
@@ -350,21 +371,19 @@ local function spawnGunRack(id)
     SetEntityAlpha(rack.object, 0)
     PlaceObjectOnGroundProperly(rack.object)
     FreezeEntityPosition(rack.object, true)
-    
-    exports["qb-target"]:AddTargetEntity({rack.object}, {
-        options = {
-            {
-                label = 'Access Gunrack',
-                name = 'gunrack:storeWeapon',
-                icon = 'fa-solid fa-hand-holding',
-                distance = 1.5,
-                action = function()
-                    if not CodeCorrect(rack.code) then return end
-                    AccessRack(id)
-                end,
-            },
+    SetModelAsNoLongerNeeded(rack.object)
+
+    exports.ox_target:addLocalEntity(rack.object, {
+        {
+            label = 'Access Gunrack',
+            name = 'gunrack:storeWeapon',
+            icon = 'fa-solid fa-hand-holding',
+            distance = 1.5,
+            onSelect = function()
+                if not CodeCorrect(rack.code) then return end
+                AccessRack(id)
+            end,
         },
-        distance = 1.5
     })
 
     for i = 0, 255, 51 do
@@ -560,18 +579,18 @@ end)
 
 AddEventHandler('onResourceStop', function(resourceName)
     if GetCurrentResourceName() ~= resourceName then return end
-    for k, v in pairs(Racks) do
-        for k, v in pairs(v.rifles) do
+    for _, v in pairs(Racks) do
+        for _, v in pairs(v.rifles) do
             if v.object then
                 DeleteEntity(v.object)
             end
         end
-        for k, v in pairs(v.pistols) do
+        for _, v in pairs(v.pistols) do
             if v.object then
                 DeleteEntity(v.object)
             end
         end
-        exports["qb-target"]:RemoveTargetEntity({v.object})
+        exports.ox_target:removeLocalEntity(v.object)
         DeleteEntity(v.object)
     end
     if tempRackObj then

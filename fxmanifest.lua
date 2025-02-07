@@ -17,5 +17,6 @@ client_scripts {
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
+    -- '@chiliaddb/init.lua',
     'server/main.lua',
 }

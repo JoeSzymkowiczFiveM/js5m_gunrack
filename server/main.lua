@@ -1,4 +1,3 @@
-Racks = {}
 local ox_inventory = exports.ox_inventory
 local db = require 'server.db.mysql'
 
@@ -14,10 +13,12 @@ local function getWeaponSlot(rack, weaponName)
 end
 
 local function inDistanceOfGunRack(id, src)
-    local sourcePed = GetPlayerPed(src)
-    local sourceCoords = GetEntityCoords(sourcePed)
+    if not Racks[id] then return false end
 
-    if #(sourceCoords - vec3(Racks[id].coords.x, Racks[id].coords.y, Racks[id].coords.z)) < 6 then
+    local ped = GetPlayerPed(src)
+    if ped == 0 then return false end
+
+    if #(GetEntityCoords(ped) - vec3(Racks[id].coords.x, Racks[id].coords.y, Racks[id].coords.z)) < 6 then
         return true
     end
     return false

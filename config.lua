@@ -1,7 +1,7 @@
 Config = {}
 
 Config.rackableWeapons = {
-    ['WEAPON_STUNGUN'] = {offset = {z = 1.36}, rotation = {x = 270.0, y = 1.0, z = 320.0}, weaponType = 'pistols'},
+    ['WEAPON_STUNGUN'] = {offset = {z = 1.36}, rotation = {x = 270.0, y = 1.0, z = 320.0}, weaponType = 'pistols', varModOverride = true},
     ['WEAPON_PISTOL'] = {offset = {z = 1.36}, rotation = {x = 270.0, y = 1.0, z = 320.0}, weaponType = 'pistols'},
     ['WEAPON_PISTOL_MK2'] = {offset = {z = 1.36}, rotation = {x = 270.0, y = 1.0, z = 320.0}, weaponType = 'pistols'},
     ['WEAPON_COMBATPISTOL'] = {offset = {z = 1.36}, rotation = {x = 270.0, y = 1.0, z = 320.0}, weaponType = 'pistols'},
@@ -37,6 +37,7 @@ Config.rackableWeapons = {
     ['WEAPON_GUSENBERG'] = {offset = {z = 0.68}, rotation = {z = 90.0}, weaponType = 'rifles'},
     ['WEAPON_SNIPERRIFLE'] = {offset = {z = 0.72}, rotation = {z = 90.0}, weaponType = 'rifles'},
     ['WEAPON_HEAVYSNIPER'] = {offset = {z = 0.72}, rotation = {z = 90.0}, weaponType = 'rifles'},
+    ['WEAPON_HEAVYSNIPER_MK2'] = {offset = {z = 0.72}, rotation = {z = 90.0}, weaponType = 'rifles'},
     ['WEAPON_MARKSMANRIFLE'] = {offset = {z = 0.72}, rotation = {z = 90.0}, weaponType = 'rifles'},
     ['WEAPON_MARKSMANRIFLE_MK2'] = {offset = {z = 0.72}, rotation = {z = 90.0}, weaponType = 'rifles'},
 }
