@@ -28,32 +28,10 @@ end
 local function GetRackPositionOffset(rackIndex, slot, weapon)
     local rack = Racks[rackIndex].object
     local weaponType = Config.rackableWeapons[weapon].weaponType
-    local xOffset = 0.0
-    if weaponType == 'rifles' then
-        if slot == 1 then
-            xOffset = -0.395
-        elseif slot == 2 then
-            xOffset = -0.28
-        elseif slot == 3 then
-            xOffset = -0.17
-        elseif slot == 4 then
-            xOffset = -0.06
-        elseif slot == 5 then
-            xOffset = 0.06
-        end
-    elseif weaponType == 'pistols' then
-        if slot == 1 then
-            xOffset = -0.32
-        elseif slot == 2 then
-            xOffset = -0.17
-        elseif slot == 3 then
-            xOffset = 0.00
-        elseif slot == 4 then
-            xOffset = 0.15
-        elseif slot == 5 then
-            xOffset = 0.30
-        end
-    end
+    local xOffset = ({
+        rifles = {-0.395, -0.28, -0.17, -0.06, 0.06},
+        pistols = {-0.32, -0.17, 0.00, 0.15, 0.30}
+    })[weaponType][slot] or 0.0
 
     local weaponData = Config.rackableWeapons[weapon]
     local zOffset = weaponData.offset.z or 0.0
@@ -64,7 +42,11 @@ local function GetRackPositionOffset(rackIndex, slot, weapon)
     local rackHeading = Racks[rackIndex].coords.w
     local weaponZRotation = weaponData.rotation.z or 90
     local zRotation = rackHeading - weaponZRotation
-    return {offset = GetOffsetFromEntityInWorldCoords(rack, xOffset, yOffset, zOffset), rot = {x = xRotation, y = yRotation, z = zRotation}}
+
+    return {
+        offset = GetOffsetFromEntityInWorldCoords(rack, xOffset, yOffset, zOffset),
+        rot = {x = xRotation, y = yRotation, z = zRotation}
+    }
 end
 
 local function hasVarMod(hash, components)
