@@ -1,5 +1,7 @@
 local ox_inventory = exports.ox_inventory
 local db = require 'server.db.mysql'
+Racks = {}
+RacksLoaded = false
 
 local function getWeaponSlot(rack, weaponName)
     local weaponType = Config.rackableWeapons[weaponName].weaponType
@@ -112,5 +114,6 @@ RegisterServerEvent('js5m_gunrack:server:destroyGunRack', function(rackIndex)
 end)
 
 lib.callback.register('js5m_gunrack:server:getRacks', function(source)
+    while not RacksLoaded do Wait(10) end
     return Racks
 end)

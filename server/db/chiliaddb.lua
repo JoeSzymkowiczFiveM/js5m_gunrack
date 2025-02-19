@@ -19,6 +19,7 @@ end
 
 ChiliadDB.ready(function()
     Racks = db.getAllGunRacks()
+    RacksLoaded = true
 end)
 
 return db

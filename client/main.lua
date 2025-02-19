@@ -291,9 +291,7 @@ local function destroyGunRack(data)
         centered = true,
         cancel = true
     })
-    
-    if confirm ~= 'cancel' then return end
-
+    if confirm == 'cancel' then return end
     TriggerServerEvent('js5m_gunrack:server:destroyGunRack', rack)
 end
 
